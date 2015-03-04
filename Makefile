@@ -23,24 +23,13 @@ LIBS	= -lm	# Libraries to link with (-lm is the math library)
 COMPILE_EXECUTABLE = $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $? $(LIBS)
 
 # These are all the files to be compiled.
-ALL	= thr histeq histo_match qntz histo_plot histo_stretch threshold_Otsu
+ALL	= qntz
 
 all:	$(ALL)
 
 # List of executable targets
-threshold_Otsu: $($@.o) IPutil.o
-
-histo_plot: $($@.o) IPutil.o
-
-thr:	$($@.o) IPutil.o
 
 qntz: $($@.o) IPutil.o
-
-histeq:	$($@.o) IPutil.o
-
-histo_match: $($@.o) IPutil.o
-
-histo_stretch: $($@.o) IPutil.o
 
 # Clean target to remove backup, object, and core files
 clean:
@@ -49,11 +38,5 @@ cleanx:
 	rm -f *~ *.o core $(ALL)
 
 # Dependencies
-threshold_Otsu: 	IP.h
-histo_plot: 		IP.h
 qntz.o: 			IP.h
-IPutil.o:			IP.h
-thr.o:				IP.h
-histeq.o:			IP.h
-histo_match.o:		IP.h
-histo_stretch.o:	IP.h
+

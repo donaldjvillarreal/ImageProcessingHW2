@@ -23,13 +23,13 @@ LIBS	= -lm	# Libraries to link with (-lm is the math library)
 COMPILE_EXECUTABLE = $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $? $(LIBS)
 
 # These are all the files to be compiled.
-ALL	= qntz
+ALL	= unordered_dither
 
 all:	$(ALL)
 
 # List of executable targets
 
-qntz: $($@.o) IPutil.o
+unordered_dither: $($@.o) IPutil.o
 
 # Clean target to remove backup, object, and core files
 clean:

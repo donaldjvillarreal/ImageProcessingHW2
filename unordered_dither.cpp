@@ -14,7 +14,7 @@
 using namespace std;
 
 // function prototype
-void unordered_dither(imageP, int, int, imageP);
+void unordered_dither(imageP, int, double, imageP);
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // main:
@@ -24,12 +24,13 @@ void unordered_dither(imageP, int, int, imageP);
 int
 main(int argc, char** argv)
 {
-	int	levels, gamma;
+	int	levels; 
+	double gamma;
 	imageP	I1, I2;
 
 	// error checking: proper usage
 	if(argc != 5) {
-		cerr << "Usage: unordered_dither infile gamma n outfile\n";
+		cerr << "Usage: unordered_dither infile n gamma outfile\n";
 		exit(1);
 	}
 
@@ -38,12 +39,12 @@ main(int argc, char** argv)
 	I2 = NEWIMAGE;
 
 	// read lower and upper thresholds
-	levels  = atoi(argv[3]);
-	gamma  = atoi(argv[2]);
+	levels  = atoi(argv[2]);
+	gamma  = atof(argv[3]);
 
 	// quantize image and save result in file
 	unordered_dither(I1, levels, gamma, I2);
-	IP_saveImage(I2, argv[3]);
+	IP_saveImage(I2, argv[4]);
 
 	// free up image structures/memory
 	IP_freeImage(I1);
@@ -60,7 +61,7 @@ main(int argc, char** argv)
 // 
 
 void
-unordered_dither(imageP I1, int levels, int gamma, imageP I2)
+unordered_dither(imageP I1, int levels, double gamma, imageP I2)
 {
 	int i, total, scale;
 	uchar *in, *out, lut[MXGRAY];
@@ -73,27 +74,37 @@ unordered_dither(imageP I1, int levels, int gamma, imageP I2)
 	I2->height = I1->height;
 	I2->image  = (uchar *) malloc(total);
 	if(I2->image == NULL) {
-		cerr << "qntz: Insufficient memory\n";
+		cerr << "unordered_dither: Insufficient memory\n";
 		exit(1);
 	}
 
-	// init lookup table
+	// Gamma correct first
+	
 	scale = MXGRAY / levels;
-
 	in  = I1->image;	// input  image buffer
+
+	double temp[total];
+	for(i=0; i<total; i++){
+		in[i] = pow((double)in[i]/255, gamma) * 255;
+	}
+
+	// init lookup table
+	
 	int rnd; 
 	for(i=0; i<total; i++){
-		rnd = rand() % scale;
+		rnd = rand()%(scale/2);
 		if(i%2 == 0){	
 			in[i] = (int)in[i] + rnd;
 		}else{
-			//cerr << "flag 1";
 			in[i] = (int)in[i] - rnd;
 		}
 	}
 
 	for(i=0; i<MXGRAY; i++){
-		lut[i] = scale * (int) (i/scale) + (int) (scale/2);
+		lut[i] = scale * (i/scale) + (scale/2);
+		if((i>1) && (lut[i] < (scale/2))){
+			lut[i] = lut[i-1];
+		}
 		cerr << (int)lut[i] << endl;
 	}
 	// iterate over all pixels

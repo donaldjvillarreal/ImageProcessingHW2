@@ -3,7 +3,7 @@
 
 ///////
 // ================================================================
-// qntz.cpp - Quantization program.
+// unordered_dither.cpp - Unordered dithering program.
 //
 // Written by: Donald Villarreal
 //             Joseph Wagner
@@ -82,21 +82,29 @@ unordered_dither(imageP I1, int levels, double gamma, imageP I2)
 	
 	scale = MXGRAY / levels;
 	in  = I1->image;	// input  image buffer
+	int temp[total];
 
-	double temp[total];
+	double gc = 1/gamma;
 	for(i=0; i<total; i++){
-		in[i] = pow((double)in[i]/255, gamma) * 255;
+		temp[i] = 255 * pow((double)in[i]/255, gc);
 	}
 
 	// init lookup table
 	
 	int rnd; 
 	for(i=0; i<total; i++){
-		rnd = rand()%(scale/2);
+		rnd = rand() % (int)(scale*0.5);
+		cerr << rnd << endl;
 		if(i%2 == 0){	
-			in[i] = (int)in[i] + rnd;
+			temp[i] = temp[i] + rnd;
 		}else{
-			in[i] = (int)in[i] - rnd;
+			temp[i] = temp[i] - rnd;
+		}
+		if(temp[i]>256){
+			temp[i] = 256;
+		}
+		else if (temp[i] < 0){
+			temp[i] = 0;
 		}
 	}
 
@@ -105,12 +113,12 @@ unordered_dither(imageP I1, int levels, double gamma, imageP I2)
 		if((i>1) && (lut[i] < (scale/2))){
 			lut[i] = lut[i-1];
 		}
-		cerr << (int)lut[i] << endl;
+		
 	}
 	// iterate over all pixels
 	
 	out = I2->image;	// output image buffer
 	for(i=0; i<total; i++){
-		out[i] = lut[ in[i] ];
+		out[i] = lut[ temp[i] ];
 	}
 }

@@ -40,10 +40,10 @@ main(int argc, char** argv)
 
 	// read lower and upper thresholds
 	xsz  = atoi(argv[2]);
-	ysz  = atof(argv[3]);
+	ysz  = atoi(argv[3]);
 
-	if(xsz < 1 || ysz < 1) {
-		cerr << "xsz and ysz must be greater than or equal to 3\n";
+	if(xsz < 1 || ysz < 1 || xsz > 127 || ysz > 127) {
+		cerr << "xsz and ysz must be a positive integer less than 128 [1, 127]\n";
 		exit(1);
 	}
 
@@ -60,7 +60,6 @@ main(int argc, char** argv)
 	IP_freeImage(I1);
 	IP_freeImage(I2);
 
-	cerr << "\n\nFinished \n\n";
 	return 1;
 }
 
@@ -75,7 +74,7 @@ void
 blur(imageP I1, int xsz, int ysz, imageP I2)
 {
 	int i, x, y, xpad, ypad, total, pad_itr, mysum, out_itr, w, h;
-	int currentline[I1->width+ysz], rowblur[I1->width*I1->height], colblur[I1->width*I1->height];
+	int xline[I1->width+xsz], yline[I1->height+ysz], rowblur[I1->width*I1->height], colblur[I1->width*I1->height];
 	uchar *in, *out;
 
 	w = I1->width;		h = I1->height;		total = w * h;		in  = I1->image;
@@ -97,16 +96,16 @@ blur(imageP I1, int xsz, int ysz, imageP I2)
 		mysum=0;
 		for(i=y*w; i<(y*w+w); i++) {
 			if(i%w==0 || i%w==(w-1)) {
-				for(pad_itr=0; pad_itr<xpad+1; pad_itr++) currentline[x++] = in[i];
+				for(pad_itr=0; pad_itr<xpad+1; pad_itr++) xline[x++] = in[i];
 			}
-			else currentline[x++] = in[i];
+			else xline[x++] = in[i];
 		}
 		
-		for(i=0; i<xsz; i++) mysum += currentline[i];
+		for(i=0; i<xsz; i++) mysum += xline[i];
 
 		for(x=xpad; x<xpad+w; x++){
-			rowblur[out_itr++] = mysum/ysz;
-			mysum += (currentline[x+xpad+1] - currentline[x-xpad]);
+			rowblur[out_itr++] = (int)mysum/xsz;
+			mysum += (xline[x+xpad+1] - xline[x-xpad]);
 		}
 	}
 
@@ -115,17 +114,17 @@ blur(imageP I1, int xsz, int ysz, imageP I2)
 		x=0;
 		mysum=0;
 		for(i=y; i<total; i+=w) {
-			if(i<w || i>(total-w)) {
-				for(pad_itr=0; pad_itr<ypad+1; pad_itr++) currentline[x++] = rowblur[i];
+			if(i<w || i>=(total-w)) {
+				for(pad_itr=0; pad_itr<ypad+1; pad_itr++) yline[x++] = rowblur[i];
 			}
-			else currentline[x++] = rowblur[i];
+			else yline[x++] = rowblur[i];
 		}
 		
-		for(i=0; i<ysz; i++) mysum += currentline[i];
+		for(i=0; i<ysz; i++) mysum += yline[i];
 
-		for(x=ypad; x<ypad+w; x++){
-			colblur[out_itr++] = mysum/xsz;
-			mysum += (currentline[x+ypad+1] - currentline[x-ypad]);
+		for(x=ypad; x<ypad+h; x++){
+			colblur[out_itr++] = (int)mysum/ysz;
+			mysum += (yline[x+ypad+1] - yline[x-ypad]);
 		}
 	}
 
@@ -136,4 +135,5 @@ blur(imageP I1, int xsz, int ysz, imageP I2)
 			out[out_itr++] = colblur[i];
 		}
 	}
+
 }

@@ -20,7 +20,7 @@ LIBS	= -lm	# Libraries to link with (-lm is the math library)
 COMPILE_EXECUTABLE = $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $? $(LIBS)
 
 # These are all the files to be compiled.
-ALL	= unordered_dither	ordered_dither	blur
+ALL	= unordered_dither	ordered_dither	blur sharpen
 
 all:	$(ALL)
 
@@ -29,6 +29,7 @@ all:	$(ALL)
 unordered_dither: 	$($@.o) IPutil.o
 ordered_dither: 	$($@.o) IPutil.o
 blur:				$($@.o) IPutil.o
+sharpen:			$($@.o) IPutil.o
 
 # Clean target to remove backup, object, and core files
 clean:
@@ -40,3 +41,4 @@ cleanx:
 unordered_dither.o: 	IP.h
 ordered_dither.o: 		IP.h
 blur.o:					IP.h
+sharpen.o:				IP.h

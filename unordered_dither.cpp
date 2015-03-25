@@ -1,6 +1,3 @@
-
-//IN PROGRESS!
-
 ///////
 // ================================================================
 // unordered_dither.cpp - Unordered dithering program.
@@ -111,8 +108,7 @@ unordered_dither(imageP I1, int levels, double gamma, imageP I2)
 		lut[i] = scale * (i/scale) + (scale/2);
 		if((i>1) && (lut[i] < (scale/2))){
 			lut[i] = lut[i-1];
-		}
-		
+		}	
 	}
 	// iterate over all pixels
 	

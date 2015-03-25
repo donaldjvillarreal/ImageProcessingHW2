@@ -63,9 +63,9 @@ main(int argc, char** argv)
 void
 ordered_dither(imageP I1, int m, double gamma, imageP I2)
 {
-	int i, total, scale;
+	int i, j, x, y, w, h, total, scale;
 	uchar *in, *out, lut[MXGRAY];
-
+	
 	// total number of pixels in image
 	total = I1->width * I1->height;
 
@@ -73,60 +73,140 @@ ordered_dither(imageP I1, int m, double gamma, imageP I2)
 	I2->width  = I1->width;
 	I2->height = I1->height;
 	I2->image  = (uchar *) malloc(total);
+	in  = I1->image;	// input  image buffer
+	h = I2->height;
+	w = I2->width;
 	if(I2->image == NULL) {
 		cerr << "ordered_dither: Insufficient memory\n";
 		exit(1);
 	}
 
-	// Gamma correct first
-	
-	//scale = MXGRAY / levels;
-	in  = I1->image;	// input  image buffer
-	int temp[total];
-
+	// Create GC lut[]		
 	double gc = 1/gamma;
-	for(i=0; i<total; i++){
-		temp[i] = 255 * pow((double)in[i]/255, gc);
+	for(i=0; i<MXGRAY; i++){
+		lut[i] = 255 * pow((double)i/255, gc);
+		cerr <<  (int)lut[i] << endl;
 	}
+	cerr << "FLAG 0" << endl;
+	
+	// Apply GC lut[]
+	for(i=0; i<total; i++)
+		in[i] = lut[ in[i] ];	
 
-	//create dither matrix
-	int n = 0;
-	int *D;
+	/////////////////////////////////
+	// Output Gamma Corrected image
+	char label1[] = "GC_mad256.pgm";
+	imageP I9;
+	I9 = NEWIMAGE;
+	I9->image  = (uchar *) malloc(total);
+	I9->width  = I1->width;
+	I9->height = I1->height;
+	out = I9->image;	// output image buffer
+	for(i=0; i<total; i++)
+		out[i] = in[i];
+	IP_saveImage(I9, label1);
+	//////////////////////////////////
+	
+	cerr << "FLAG 1" << endl;
+	// Create Quantize lut[]
+	scale = MXGRAY / (m*m);
+	for(i=0; i<MXGRAY; i++)
+		lut[i] = scale * (int) (i/scale) + (int) (scale/2);
+
+	// Apply lut[]
+	for(i=0; i<total; i++)
+		in[i] = lut[ in[i] ];	
+
+	cerr << "FLAG 2" << endl;	
+
+	/////////////////////////////////
+	// Output Gamma corrected and Quantized image
+	char label2[] = "GC_QNTZ_mad256.pgm";
+	imageP I8;
+	I8 = NEWIMAGE;
+	I8->width  = I1->width;
+	I8->height = I1->height;
+	I8->image  = (uchar *) malloc(total);
+	out = I8->image;	// output image buffer
+	for(i=0; i<total; i++)
+		out[i] = lut[ in[i] ];
+	IP_saveImage(I8, label2);
+	//////////////////////////////////
+
+	out = I2->image;	// output image buffer;
+	cerr << "FLAG 3" << endl;
 	switch(m){
 	case 2:
-	{
-		n = 2; 	
-		int D2[2][2] = {
+	{	
+		int D[2][2] = {
 					{0, 2},
 					{3, 1}};
-		D = &D2[0][0];
+		for(i=0;i<m;++i){
+			for(j=0;j<m;++j){
+				D[i][j] = ((scale*(double)D[i][j])+((double)D[i][j]*scale));
+			}
+		}
+		cerr << "D[0][0] = " << D[0][0] << "D[0][1] = " << D[0][1] 
+			 << "D[1][0] = " << D[1][0] << "D[1][1] = " << D[1][1] << endl;
+		
+		for(y=0;y<h;++y){
+			for(x=0;x<w;++x){
+				i = x%m;
+				j = y%m;
+				if(D[i][j] == 0){
+					out[y*w+x] = 0;
+				}
+				else{
+					out[y*w+x] = (in[y*w+x] > 255/D[i][j]) ? 255 : 0;
+				}
+			}
+		}
 	}
 	break;
 	case 3:
 	{
-		n = 3;
-		int D3[3][3] = {
+		int D[3][3] = {
 					{6, 8, 4}, 
 					{1, 0, 3}, 
 					{5, 2, 7}};
-		D = &D3[0][0];
+		for(y=0;y<h;++y){
+			for(x=0;x<w;++x){
+				i = x%m;
+				j = y%m;
+				if(D[i][j] == 0){
+					out[y*w+x] = 0;
+				}
+				else{
+					out[y*w+x] = (in[y*w+x] > 255/D[i][j]) ? 255 : 0;
+				}
+			}
+		}	
 	}
 	break;
 	case 4:
-	{
-		n = 4;				
-		int D4[4][4] = {
+	{				
+		int	D[4][4] = {
 					{0, 8, 2, 10 }, 
 					{12, 4, 14, 6}, 
 					{3, 11, 1, 9 },
 					{15, 7, 13, 5}};
-		D = &D4[0][0];
+		for(y=0;y<h;++y){
+			for(x=0;x<w;++x){
+				i = x%m;
+				j = y%m;
+				if(D[i][j] == 0){
+					out[y*w+x] = 0;
+				}
+				else{
+					out[y*w+x] = (in[y*w+x] > 255/D[i][j]) ? 255 : 0;
+				}
+			}
+		}	
 	}	
 	break;
 	case 8:
-	{
-		n = 8;				
-		int D8[8][8] = {
+	{				
+		int D[8][8] = {
 					{0,32,8,40,2,34,10,42	}, 
 					{48,16,56,24,50,18,58,26},
 					{12,44,4,36,14,46,6,38	}, 
@@ -135,47 +215,21 @@ ordered_dither(imageP I1, int m, double gamma, imageP I2)
 					{51,19,59,27,49,17,57,25},
 					{15,47,7,39,13,45,5,37	}, 
 					{63,31,55,23,61,29,53,21}};
-		D = &D8[0][0];
+		for(y=0;y<h;++y){
+			for(x=0;x<w;++x){
+				i = x%m;
+				j = y%m;
+				if(D[i][j] == 0){
+					out[y*w+x] = 0;
+				}
+				else{
+					out[y*w+x] = (in[y*w+x] > 256/D[i][j]) ? 255 : 0;
+				}
+			}
+		}
 	}
 	break;
 	default:
-		cerr << "Invalid matrix dimension. Valid m values are 2, 3, 4, 8." << endl;
-
+		cerr << "Invalid matrix dimensions. Valid m values are 2, 3, 4, 8." << endl;
 	}
-	cerr << n << endl;
-	cerr << D[1] << endl;
-
-	// init lookup table
-	
-	/*
-	int rnd; 
-	for(i=0; i<total; i++){
-		rnd = rand() % (int)(scale*0.5);
-		cerr << rnd << endl;
-		if(i%2 == 0){	
-			temp[i] = temp[i] + rnd;
-		}else{
-			temp[i] = temp[i] - rnd;
-		}
-		if(temp[i]>256){
-			temp[i] = 256;
-		}
-		else if (temp[i] < 0){
-			temp[i] = 0;
-		}
-	}
-
-	for(i=0; i<MXGRAY; i++){
-		lut[i] = scale * (i/scale) + (scale/2);
-		if((i>1) && (lut[i] < (scale/2))){
-			lut[i] = lut[i-1];
-		}
-		
-	}
-	// iterate over all pixels
-	
-	out = I2->image;	// output image buffer
-	for(i=0; i<total; i++){
-		out[i] = lut[ temp[i] ];
-	}*/
 }

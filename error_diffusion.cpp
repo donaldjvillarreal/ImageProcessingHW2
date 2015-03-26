@@ -42,11 +42,11 @@ main(int argc, char** argv)
 	mtd  = atoi(argv[2]);
 	serpentine  = atoi(argv[3]);
 	gamma = atof(argv[4]);
-	cerr << "==" << gamma << endl;
 
 
 	// error_diffuse and save result in file
 	error_diffusion(I1, mtd, serpentine, gamma, I2);
+	cerr << "I2->height=" << I2->height << "width=" << I2->width;
 	IP_saveImage(I2, argv[5]);
 
 	// free up image structures/memory
@@ -75,7 +75,8 @@ error_diffusion(imageP I1, int mtd, int serpentine, double gamma, imageP I2)
 	// init I2 dimensions and buffer
 	I2->width  = I1->width;
 	I2->height = I1->height;
-	I2->image  = (uchar *) malloc(total);
+	int total2 = I2->width * I2->height;
+	I2->image  = (uchar *) malloc(total2);
 	in  = I1->image;	// input  image buffer
 	out = I2->image;
 	if(I2->image == NULL) {
@@ -106,18 +107,17 @@ error_diffusion(imageP I1, int mtd, int serpentine, double gamma, imageP I2)
 			int thr = MXGRAY / 2; // init threshold value
 			
 			for(i=0; i<w; ++i){ // copy row 0 to circular buffer
-				buf[0][i]=in[i];
+				buf[0][i+1]=in[i];
 				
 			}
-
 			for(y=0; y<h; y++){ // visit all input rows
 				for(i=0;i<w;++i){ // copy next row to circ buffer
-					buf[(y+1)%2][i]=in[(y+1)*w+i];
+					buf[(y+1)%2][i+1]=in[(y+1)*w+i];
 				}
 				in1 = buf[y%2]+1; // circ buffer pointer skip over pad
 				in2 = buf[(y+1)%2]+1; // circ buffer ptr; skip over pad
 				for(x=0; x<w; x++){ // visit all input cols
-					*out = (*in1 < thr)? 0 : 255; // threshold
+					*out = (*in1 < thr)? 255 : 0; // threshold
 					e = *in1 - *out; //eval error
 					in1[1] += (e*7/16.); // add error to E nbr
 					in2[-1] += (e*3/16.); // add error to SW nbr
@@ -128,26 +128,20 @@ error_diffusion(imageP I1, int mtd, int serpentine, double gamma, imageP I2)
 				}
 			}
 		}else{ // FS-SERPENTINE	
-			int x, y, i;
+						int x, y, i;
 			int w = I1->width;
 			int h = I1->height;
-			uchar buf[2][w+2];
-			uchar e, *in1, *in2;;
+			int buf[2][w+2];
+			int e, *in1, *in2;
 			int thr = MXGRAY / 2; // init threshold value
 			
 			for(i=0; i<w; ++i){ // copy row 0 to circular buffer
-				buf[0][i]=in[i];
+				buf[0][i+1]=in[i];
+				
 			}
-
 			for(y=0; y<h; y++){ // visit all input rows
-				if(y%2 == 0){
-					for(i=0;i<w;++i){ // copy next row to circ buffer
-						buf[(y+1)%2][i]=in[(y+1)*w+i];
-					}
-				}else{
-					for(i=0;i<w;++i){ // copy next row to circ buffer
-						buf[(y+1)%2][w-i]=in[(y+1)*w+i];
-					}
+				for(i=0;i<w;++i){ // copy next row to circ buffer
+					buf[(y+1)%2][i+1]=in[(y+1)*w+i];
 				}
 				in1 = buf[y%2]+1; // circ buffer pointer skip over pad
 				in2 = buf[(y+1)%2]+1; // circ buffer ptr; skip over pad
@@ -170,23 +164,22 @@ error_diffusion(imageP I1, int mtd, int serpentine, double gamma, imageP I2)
 			int h = I1->height;
 			uchar buf[3][w+4];
 			uchar e, *in1, *in2, *in3;
-			int thr = MXGRAY / 2; // init threshold value
-			
+			int thr = MXGRAY / 2; // init threshold value			
 			for(i=0; i<w; ++i){ // copy row 0 to circular buffer
-				buf[0][i]=in[i];
+				buf[0][i+2]=in[i];
 			}
 			for(i=0; i<w; ++i){ // copy row 0 to circular buffer
-				buf[1][i]=in[w+i];
+				buf[1][i+2]=in[w+i+1];
 			}
 			for(y=0; y<h; y++){ // visit all input rows
 				for(i=0;i<w;++i){ // copy next row to circ buffer
-					buf[(y+2)%3][i]=in[(y+1)*w+i];
+					buf[(y+2)%3][i+2]=in[(y+2)*w+i+2];
 				}
-				in1 = buf[y%3]+1; // circ buffer pointer skip over pad
-				in2 = buf[(y+1)%3]+1; // circ buffer ptr; skip over pad
-				in3 = buf[(y+2)%3]+1;
+				in1 = buf[y%3]+2; // circ buffer pointer skip over pad
+				in2 = buf[(y+1)%3]+2; // circ buffer ptr; skip over pad
+				in3 = buf[(y+2)%3]+2;
 				for(x=0; x<w; x++){ // visit all input cols
-					*out = (*in1 < thr)? 255 : 0; // threshold
+					*out = (*in1 < thr)? 0 : 255; // threshold
 					e = *in1 - *out; //eval error
 					in1[1] += (e*7/48.); 
 					in1[2] += (e*5/48.);
@@ -227,7 +220,7 @@ error_diffusion(imageP I1, int mtd, int serpentine, double gamma, imageP I2)
 				in2 = buf[(y+1)%3]+1; // circ buffer ptr; skip over pad
 				in3 = buf[(y+2)%3]+1;
 				for(x=0; x<w; x++){ // visit all input cols
-					*out = (*in1 < thr)? 255 : 0; // threshold
+					*out = (*in1 < thr)? 0 : 255; // threshold
 					e = *in1 - *out; //eval error
 					in1[1] += (e*7/48.); 
 					in1[2] += (e*5/48.);

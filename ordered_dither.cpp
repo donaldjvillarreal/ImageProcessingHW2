@@ -85,9 +85,7 @@ ordered_dither(imageP I1, int m, double gamma, imageP I2)
 	double gc = 1/gamma;
 	for(i=0; i<MXGRAY; i++){
 		lut[i] = 255 * pow((double)i/255, gc);
-		cerr <<  (int)lut[i] << endl;
 	}
-	cerr << "FLAG 0" << endl;
 	
 	// Apply GC lut[]
 	for(i=0; i<total; i++)

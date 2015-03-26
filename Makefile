@@ -28,12 +28,12 @@ all:	$(ALL)
 
 unordered_dither: 	$($@.o) IPutil.o
 ordered_dither: 	$($@.o) IPutil.o
-halftone:			$($@.o) IPutil.o
+halftone:		$($@.o) IPutil.o
 error_diffusion:	$($@.o) IPutil.o
-blur:				$($@.o) IPutil.o
-sharpen:			$($@.o) IPutil.o
-median:				$($@.o) IPutil.o
-convolve:			$($@.o) IPutil.o
+blur:			$($@.o) IPutil.o
+sharpen:		$($@.o) IPutil.o
+median:			$($@.o) IPutil.o
+convolve:		$($@.o) IPutil.o
 
 # Clean target to remove backup, object, and core files
 clean:
@@ -42,11 +42,11 @@ cleanx:
 	rm -f *~ *.o core $(ALL)
 
 # Dependencies
-unordered_dither.o: 	IP.h
+unordered_dither.o: 		IP.h
 ordered_dither.o: 		IP.h
-halftone.o:				IP.h
+halftone.o:			IP.h
 error_diffusion.o:		IP.h
-blur.o:					IP.h
-sharpen.o:				IP.h
-median.o:				IP.h
-convolve.o:				IP.h
+blur.o:				IP.h
+sharpen.o:			IP.h
+median.o:			IP.h
+convolve.o:			IP.h

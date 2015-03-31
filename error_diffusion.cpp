@@ -241,5 +241,3 @@ error_diffusion(imageP I1, int mtd, int serpentine, double gamma, imageP I2)
 		}
 	}
 }
-
-

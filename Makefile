@@ -28,11 +28,20 @@ all:	$(ALL)
 error_diffusion:	$($@.o) IPutil.o
 unordered_dither: 	$($@.o) IPutil.o
 ordered_dither: 	$($@.o) IPutil.o
+<<<<<<< HEAD
 halftone:			$($@.o) IPutil.o
 blur:				$($@.o) IPutil.o
 sharpen:			$($@.o) IPutil.o
 median:				$($@.o) IPutil.o
 convolve:			$($@.o) IPutil.o
+=======
+halftone:		$($@.o) IPutil.o
+error_diffusion:	$($@.o) IPutil.o
+blur:			$($@.o) IPutil.o
+sharpen:		$($@.o) IPutil.o
+median:			$($@.o) IPutil.o
+convolve:		$($@.o) IPutil.o
+>>>>>>> a769ff31a593492f9b9e7d588a53144c56eaf81a
 
 # Clean target to remove backup, object, and core files
 clean:
@@ -41,6 +50,7 @@ cleanx:
 	rm -f *~ *.o core $(ALL)
 
 # Dependencies
+<<<<<<< HEAD
 error_diffusion.o:		IP.h
 unordered_dither.o: 	IP.h
 ordered_dither.o: 		IP.h
@@ -49,3 +59,13 @@ blur.o:					IP.h
 sharpen.o:				IP.h
 median.o:				IP.h
 convolve.o:				IP.h
+=======
+unordered_dither.o: 		IP.h
+ordered_dither.o: 		IP.h
+halftone.o:			IP.h
+error_diffusion.o:		IP.h
+blur.o:				IP.h
+sharpen.o:			IP.h
+median.o:			IP.h
+convolve.o:			IP.h
+>>>>>>> a769ff31a593492f9b9e7d588a53144c56eaf81a
